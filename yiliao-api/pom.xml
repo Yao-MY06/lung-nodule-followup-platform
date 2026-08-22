@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.yiliao</groupId>
+        <artifactId>yiliao</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>yiliao-api</artifactId>
+    <name>yiliao-api</name>
+    <description>服务间 Feign 契约 + DTO（按服务分包）。只依赖 core + openfeign 注解，禁止携带实现（specs/global/30 §3）</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.yiliao</groupId>
+            <artifactId>yiliao-common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+    </dependencies>
+</project>

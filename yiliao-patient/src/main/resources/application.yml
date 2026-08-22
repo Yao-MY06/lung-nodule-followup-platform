@@ -1,0 +1,42 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: yiliao-patient
+  datasource:
+    url: jdbc:mysql://localhost:3306/yiliao_patient?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: yiliao123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+        server-addr: localhost:8848
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+yiliao:
+  patient:
+    # 身份证 AES 密钥（32字节 base64）；生产由 Nacos/环境变量覆盖（specs/modules/patient.md §4.3）
+    idcard-key: ZGV2LW9ubHktaWRjYXJkLWtleS0wMTIzNDU2Nzg5YWI=
+
+knife4j:
+  enable: true
+
+logging:
+  level:
+    com.yiliao: INFO

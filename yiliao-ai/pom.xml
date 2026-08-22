@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.yiliao</groupId>
+        <artifactId>yiliao</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>yiliao-ai</artifactId>
+    <name>yiliao-ai</name>
+    <description>AI 服务：报告抽取/解读/RAG 问答/Tool Calling（specs/modules/ai.md，红区：出网脱敏与越权防护）</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.yiliao</groupId>
+            <artifactId>yiliao-common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.yiliao</groupId>
+            <artifactId>yiliao-common-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.yiliao</groupId>
+            <artifactId>yiliao-common-data</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.yiliao</groupId>
+            <artifactId>yiliao-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+        <!-- Spring AI：OpenAI 兼容协议，模型可插拔（specs/modules/ai.md §4.7） -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

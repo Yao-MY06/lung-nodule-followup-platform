@@ -1,0 +1,15 @@
+---
+description: "按仓库 AI 工作流执行只读探索、规格、人工批准、验证和风险审查"
+globs: ""
+alwaysApply: false
+---
+
+请先读取仓库根目录的 `AGENTS.md`，它是唯一事实源，不要在本规则复制完整政策。
+
+- 默认先只读探索，引用确切文件和既有模式。
+- 使用 `templates/task-brief.md` 分配绿/黄/红风险车道。
+- 对黄区、红区或多步骤任务使用 `templates/specification.md`，再生成 `templates/implementation-plan.md`。
+- 计划必须经过人工批准后才能修改文件；每个实现任务保持小而可验证。
+- 测试或验证条件先于实现确定，完成后用 `templates/verification-report.md` 保存证据。
+- 提交和合并前分别执行 `checklists/before-submit.md` 与 `checklists/before-merge.md`。
+- 红区变更需要资深工程师与安全角色双审；并行代理只用于已批准且边界不重叠的任务。

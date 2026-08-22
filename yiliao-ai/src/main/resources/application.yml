@@ -1,0 +1,57 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: yiliao-ai
+  datasource:
+    url: jdbc:mysql://localhost:3306/yiliao_ai?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: yiliao123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  ai:
+    openai:
+      # OpenAI 兼容协议：DeepSeek/通义/豆包换 base-url + model 即可（specs/modules/ai.md §4.7）
+      # api-key 生产走 Nacos/环境变量，仓库占位
+      api-key: ${YILIAO_LLM_API_KEY:sk-dev-placeholder}
+      base-url: ${YILIAO_LLM_BASE_URL:https://api.deepseek.com}
+      chat:
+        options:
+          model: ${YILIAO_LLM_MODEL:deepseek-chat}
+          temperature: 0.2
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+        server-addr: localhost:8848
+  autoconfigure:
+    exclude:
+      - org.redisson.spring.starter.RedissonAutoConfiguration
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+yiliao:
+  ai:
+    rag:
+      top-k: 3
+      chunk-size: 600
+      chunk-overlap: 100
+
+knife4j:
+  enable: true
+
+logging:
+  level:
+    com.yiliao: INFO

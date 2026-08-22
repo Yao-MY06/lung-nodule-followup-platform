@@ -1,0 +1,48 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: yiliao-followup
+  datasource:
+    url: jdbc:mysql://localhost:3306/yiliao_followup?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: yiliao123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  rocketmq:
+    name-server: localhost:9876
+    producer:
+      group: yiliao-followup-producer
+      send-message-timeout: 5000
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+        server-addr: localhost:8848
+
+yiliao:
+  xxl-job:
+    enabled: false          # 联调时开启：admin-addresses: http://localhost:8280/xxl-job-admin
+    admin-addresses: http://localhost:8280/xxl-job-admin
+    appname: yiliao-followup
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+knife4j:
+  enable: true
+
+logging:
+  level:
+    com.yiliao: INFO
