@@ -203,6 +203,13 @@ public class ArchiveService {
         archiveMapper.updateById(archive);
     }
 
+    /** 患者端：按登录 userId 查本人档案（服务端强制本人数据，specs/modules/patient.md §6）。 */
+    public PatientArchive findMine(Long userId) {
+        return archiveMapper.selectOne(new LambdaQueryWrapper<PatientArchive>()
+                .eq(PatientArchive::getUserId, userId)
+                .last("LIMIT 1"));
+    }
+
     /** 是否存在任一危险因素（PatientApi.hasRiskFactor 契约，F1 确认链路使用）。 */
     public boolean hasRiskFactor(Long patientId) {
         PatientRiskFactor risk = riskFactorMapper.selectOne(new LambdaQueryWrapper<PatientRiskFactor>()

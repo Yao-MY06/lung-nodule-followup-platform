@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -56,6 +57,20 @@ public class ArchiveController {
     public Result<Void> changeStage(@PathVariable Long id, @RequestParam String stageLabel) {
         archiveService.changeStage(id, stageLabel);
         return Result.ok();
+    }
+
+    @Operation(summary = "患者端：我的档案摘要（按当前登录患者服务端自查，防越权）")
+    @GetMapping("/archives/my")
+    public Result<MyArchiveVO> my(@RequestHeader(com.yiliao.common.core.constant.YiliaoConstants.HEADER_USER_ID) Long userId) {
+        PatientArchive archive = archiveService.findMine(userId);
+        if (archive == null) {
+            return Result.ok(null);
+        }
+        return Result.ok(new MyArchiveVO(archive.getId(), archive.getPatientNo(),
+                archive.getName(), archive.getStageLabel()));
+    }
+
+    public record MyArchiveVO(Long id, String patientNo, String name, String stageLabel) {
     }
 
     @Operation(summary = "变更主管医生")
