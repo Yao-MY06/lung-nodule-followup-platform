@@ -48,6 +48,16 @@ spring:
         - id: file
           uri: http://localhost:8088
           predicates: [ "Path=/api/file/**" ]
+    # Sentinel 服务治理（P5）：仅注册限流/熔断能力，默认不依赖控制台
+    # 控制台未启动不影响网关运行：eager=false 不在启动期主动连控制台；
+    # transport.dashboard 未配置（保持注释）时客户端不外连，网关路由与鉴权照常工作
+    sentinel:
+      eager: false   # 懒加载：首次请求才初始化 Sentinel，避免无控制台环境启动报错/阻塞
+      transport:
+        # 启用控制台方式：① docker/docker-compose.yml 文末取消 sentinel-dashboard 注释（端口 8858）并 up -d
+        #               ② 取消下行注释重启网关，控制台 localhost:8858 即可看到 yiliao-gateway
+        # dashboard: localhost:8858
+        port: 8719   # Sentinel 客户端与控制台的通信端口（默认 8719，被占用时自动 +1 递增，无需改动）
 
 yiliao:
   jwt:

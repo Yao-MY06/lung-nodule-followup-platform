@@ -10,9 +10,9 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>yiliao-gateway</artifactId>
-    <name>yiliao-gateway</name>
-    <description>统一入口：路由/JWT 校验/黑名单/CORS（specs/modules/gateway.md，红区）。注意：WebFlux 栈，禁止依赖 common-web</description>
+    <artifactId>yiliao-statistics</artifactId>
+    <name>yiliao-statistics</name>
+    <description>统计驾驶舱：XXL-Job 预聚合快照 + 只读查询（specs/modules/statistics.md，绿区）</description>
 
     <dependencies>
         <dependency>
@@ -21,37 +21,29 @@
         </dependency>
         <dependency>
             <groupId>com.yiliao</groupId>
-            <artifactId>yiliao-common-security</artifactId>
+            <artifactId>yiliao-common-web</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-gateway</artifactId>
+            <groupId>com.yiliao</groupId>
+            <artifactId>yiliao-common-data</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
+        <!-- 预聚合 Job 执行器（specs/modules/statistics.md §4.1），默认关闭联调开启 -->
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
-        </dependency>
-        <!-- Sentinel 限流/熔断（P5 服务治理）：版本由根 POM 的 spring-cloud-alibaba-dependencies BOM 管理 -->
-        <dependency>
-            <groupId>com.alibaba.cloud</groupId>
-            <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+            <groupId>com.xuxueli</groupId>
+            <artifactId>xxl-job-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

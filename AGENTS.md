@@ -44,8 +44,8 @@
 | followup-service | 8084 | 规则引擎、计划生成、任务调度、随访记录、失访管理（核心） | ✅ P2（MQ/XXL-Job P3） |
 | notification-service | 8085 | 站内信/短信/模板消息、延迟消息消费 | ✅ P3（宣教/问卷 CRUD 与医生侧通知 P3b） |
 | ai-service | 8086 | 报告解读、RAG 问答、结构化抽取、Tool Calling | ✅ P4（Seata/PgVector/会话记忆 P4b） |
-| statistics-service | 8087 | 统计驾驶舱 | P5 |
-| file-service | 8088 | MinIO 附件上传下载 | P5 |
+| statistics-service | 8087 | 统计驾驶舱 | ✅ P5（数据源接 Feign P5b） |
+| file-service | 8088 | MinIO 附件上传下载 | ✅ P5 |
 
 - 服务间通信：同步查询走 OpenFeign（带 Sentinel 降级）；状态变更事件走 RocketMQ（最终一致）。
 - 工程结构事实源：`specs/global/30-架构与工程约束.md`（Maven 单仓多模块：6 个 common + yiliao-api + 9 服务 + yiliao-ui；每服务独立数据库，禁止跨库直连；Feign/MQ 契约、事务/缓存/幂等规范均在其中）。

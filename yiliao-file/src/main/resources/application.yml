@@ -1,0 +1,26 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: yiliao-file
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+        server-addr: localhost:8848
+
+yiliao:
+  file:
+    endpoint: http://localhost:9000
+    access-key: yiliao          # 开发占位；生产走 Nacos 加密配置/环境变量（AGENTS.md 安全边界）
+    secret-key: yiliao123456
+    bucket: yiliao-report       # 报告附件（私有桶，仅预签名访问）
+    public-bucket: yiliao-public  # 宣教图片（公开读，P5 预留）
+
+knife4j:
+  enable: true
+
+logging:
+  level:
+    com.yiliao: INFO

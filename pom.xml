@@ -21,6 +21,8 @@
         <module>yiliao-followup</module>
         <module>yiliao-notification</module>
         <module>yiliao-ai</module>
+        <module>yiliao-statistics</module>
+        <module>yiliao-file</module>
     </modules>
 
     <properties>
@@ -37,6 +39,7 @@
         <knife4j.version>4.5.0</knife4j.version>
         <jjwt.version>0.12.6</jjwt.version>
         <xxl-job.version>2.4.1</xxl-job.version>
+        <minio.version>8.5.7</minio.version>
     </properties>
 
     <dependencyManagement>
@@ -121,6 +124,11 @@
                 <groupId>com.xuxueli</groupId>
                 <artifactId>xxl-job-core</artifactId>
                 <version>${xxl-job.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.minio</groupId>
+                <artifactId>minio</artifactId>
+                <version>${minio.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
