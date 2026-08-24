@@ -1,0 +1,15 @@
+# 本地联调覆盖文件（不并入主 compose；本机 3306/8081 被占用时启用）
+# 用法：docker compose -f docker-compose.yml -f docker-compose.local.yml up -d mysql redis rocketmq-broker
+# 服务侧连接 3307 用运行时参数覆盖：--spring.datasource.url=jdbc:mysql://localhost:3307/yiliao_xxx
+name: yiliao
+
+services:
+  mysql:
+    ports: !override
+      - "3307:3306"
+
+  # broker proxy 端口 8081 与 auth-service 冲突 → 本地改 8082
+  rocketmq-broker:
+    ports: !override
+      - "10911:10911"
+      - "8082:8081"

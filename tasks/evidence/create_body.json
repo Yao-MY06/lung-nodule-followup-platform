@@ -1,0 +1,1 @@
+{"name": "测试患者A", "gender": 1, "birthDate": "1970-05-01", "phone": "13900001111", "doctorId": 2, "sourceType": 1, "riskFactor": {"smokingPackYear": 0, "familyHistory": 0, "occupationalExposure": 0, "priorCancer": 0}, "plan": {"scene": 1, "input": {"noduleType": 3, "maxDiaMm": 4.0}}}

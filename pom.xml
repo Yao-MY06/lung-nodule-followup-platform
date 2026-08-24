@@ -143,6 +143,8 @@
                     <configuration>
                         <release>17</release>
                         <encoding>UTF-8</encoding>
+                        <!-- Spring MVC @RequestParam/@PathVariable 按名绑定需要参数名保留 -->
+                        <parameters>true</parameters>
                     </configuration>
                 </plugin>
                 <plugin>

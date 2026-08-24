@@ -11,7 +11,7 @@ import jakarta.validation.constraints.NotNull;
 /**
  * notification 服务对外契约（specs/global/30 §5）：即时站内信，同样过 bizKey 幂等。
  */
-@FeignClient(name = "yiliao-notification", contextId = "notifyApi")
+@FeignClient(name = "yiliao-notification", url = "${yiliao.feign.notify-url:http://localhost:8085}", contextId = "notifyApi")
 public interface NotifyApi {
 
     @PostMapping("/api/notify/internal/messages")

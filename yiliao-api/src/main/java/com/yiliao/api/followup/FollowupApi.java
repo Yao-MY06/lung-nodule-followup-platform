@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  * followup 服务对外契约（specs/global/30 §5）。
  * generatePlan 供 patient 建档联动调用（P2 同步调用，P4 升级 Seata）。
  */
-@FeignClient(name = "yiliao-followup", contextId = "followupApi")
+@FeignClient(name = "yiliao-followup", url = "${yiliao.feign.followup-url:http://localhost:8084}", contextId = "followupApi")
 public interface FollowupApi {
 
     @PostMapping("/api/followup/internal/plans/generate")

@@ -11,7 +11,7 @@ import jakarta.validation.constraints.NotBlank;
 /**
  * ai 服务对外契约（specs/global/30 §5）：报告结构化抽取，供 nodule 调用。
  */
-@FeignClient(name = "yiliao-ai", contextId = "aiApi")
+@FeignClient(name = "yiliao-ai", url = "${yiliao.feign.ai-url:http://localhost:8086}", contextId = "aiApi")
 public interface AiApi {
 
     @PostMapping("/api/ai/internal/report/extract")

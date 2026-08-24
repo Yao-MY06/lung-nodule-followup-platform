@@ -10,6 +10,8 @@ spring:
     password: yiliao123
     driver-class-name: com.mysql.cj.jdbc.Driver
   cloud:
+    compatibility-verifier:
+      enabled: false   # SC 2023.0.3 校验器不认 Boot 3.4.5（SCA 矩阵允许），见 AGENTS.md 已知陷阱
     nacos:
       discovery:
         enabled: false
@@ -17,7 +19,7 @@ spring:
   # nodule 无 Redis 依赖，排除 Redisson 自动装配避免启动失败（specs/modules/nodule.md §7）
   autoconfigure:
     exclude:
-      - org.redisson.spring.starter.RedissonAutoConfiguration
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
 

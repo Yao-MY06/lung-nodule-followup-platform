@@ -14,6 +14,8 @@ spring:
       host: localhost
       port: 6379
   cloud:
+    compatibility-verifier:
+      enabled: false   # SC 2023.0.3 校验器不认 Boot 3.4.5（SCA 矩阵允许），见 AGENTS.md 已知陷阱
     nacos:
       discovery:
         enabled: false

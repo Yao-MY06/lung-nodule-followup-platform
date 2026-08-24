@@ -2,14 +2,14 @@ package com.yiliao.notification.channel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
  * 默认短信实现：仅日志（阿里云/腾讯云 SDK 对接后替换， specs/modules/notification.md §7）。
  */
 @Component
-@ConditionalOnMissingBean(SmsChannel.class)
+@ConditionalOnProperty(name = "yiliao.notify.sms-channel", havingValue = "logging", matchIfMissing = true)
 public class LoggingSmsChannel implements SmsChannel {
 
     private static final Logger log = LoggerFactory.getLogger(LoggingSmsChannel.class);

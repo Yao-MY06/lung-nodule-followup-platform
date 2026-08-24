@@ -1,5 +1,5 @@
--- yiliao_notify 库（specs/modules/notification.md §2；DDL 源自 make/技术设计文档 §10，补 create_by/update_by）
--- 宣教/问卷 P3b 再实现代码，本期仅建表
+﻿-- yiliao_notify 库（specs/modules/notification.md §2；DDL 源自 make/技术设计文档 §10，补 create_by/update_by）
+--宣教/问卷 P3b 再实现代码，本期仅建表
 
 USE yiliao_notify;
 

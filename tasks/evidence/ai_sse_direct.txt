@@ -1,0 +1,9 @@
+event:delta
+data:
+
+event:delta
+data:AI 服务暂时不可用，请稍后再试或联系您的医生
+
+event:done
+data:[DONE]
+

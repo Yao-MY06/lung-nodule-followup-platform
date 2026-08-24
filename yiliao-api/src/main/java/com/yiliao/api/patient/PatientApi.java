@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 /**
  * patient 服务对外契约（specs/global/30 §5）。
  */
-@FeignClient(name = "yiliao-patient", contextId = "patientApi")
+@FeignClient(name = "yiliao-patient", url = "${yiliao.feign.patient-url:http://localhost:8082}", contextId = "patientApi")
 public interface PatientApi {
 
     @GetMapping("/api/patient/internal/archives/{id}")

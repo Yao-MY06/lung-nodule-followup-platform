@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * nodule 服务对外契约（specs/global/30 §5）。
  */
-@FeignClient(name = "yiliao-nodule", contextId = "noduleApi")
+@FeignClient(name = "yiliao-nodule", url = "${yiliao.feign.nodule-url:http://localhost:8083}", contextId = "noduleApi")
 public interface NoduleApi {
 
     @GetMapping("/api/nodule/internal/nodules/patient/{patientId}/trend")
