@@ -1,0 +1,86 @@
+/* ── 肺结节患者管理系统 · 设计系统（临床洁净风）──────────────────
+   方向：医疗可信感 —— 青蓝主色 + 深墨文字 + 柔和蓝灰背景 + 圆润留白卡片
+   原则：一个主色贯穿，状态色克制使用；所有页面共用本文件令牌 */
+:root {
+  /* 主色与色阶 */
+  --yl-primary: #0d7e76;
+  --yl-primary-dark: #0a645e;
+  --yl-ink: #16232b;
+  --yl-ink-2: #3d4f5d;
+  --yl-muted: #7a8a96;
+  --yl-line: #e6eef2;
+  --yl-bg: #f2f7fa;
+  --yl-danger: #d9524a;
+  --yl-warning: #e8963d;
+  --yl-success: #2e9e6b;
+  --yl-info: #5b7c8c;
+
+  /* 表面 */
+  --yl-radius: 12px;
+  --yl-shadow: 0 2px 14px rgba(23, 43, 77, 0.07);
+  --yl-shadow-hover: 0 6px 20px rgba(13, 126, 118, 0.12);
+
+  /* Element Plus 主题注入 */
+  --el-color-primary: var(--yl-primary);
+  --el-color-primary-dark-2: var(--yl-primary-dark);
+  --el-color-primary-light-3: #4aa79f;
+  --el-color-primary-light-5: #86bfbc;
+  --el-color-primary-light-7: #b6dad8;
+  --el-color-primary-light-8: #cce7e5;
+  --el-color-primary-light-9: #e6f3f2;
+  --el-color-primary-hover: var(--el-color-primary-light-3);
+  --el-color-danger: var(--yl-danger);
+  --el-color-warning: var(--yl-warning);
+  --el-color-success: var(--yl-success);
+  --el-color-info: var(--yl-info);
+  --el-text-color-primary: var(--yl-ink);
+  --el-text-color-regular: var(--yl-ink-2);
+  --el-border-color: var(--yl-line);
+  --el-border-color-lighter: var(--yl-line);
+  --el-border-radius-base: 8px;
+  --el-font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+}
+
+html, body, #app {
+  height: 100%;
+  margin: 0;
+  font-family: var(--el-font-family);
+  color: var(--yl-ink);
+  background: var(--yl-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 通用页面容器与卡片 */
+.yl-page { padding: 20px 24px; }
+.yl-card {
+  background: #fff;
+  border: 1px solid var(--yl-line);
+  border-radius: var(--yl-radius);
+  box-shadow: var(--yl-shadow);
+}
+.yl-page-title {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.yl-page-sub { margin: 0 0 20px; color: var(--yl-muted); font-size: 13px; }
+
+/* 数字强调（统计/指标） */
+.yl-num { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Element Plus 全局微调 */
+.el-card { border-radius: var(--yl-radius); border-color: var(--yl-line); }
+.el-table th.el-table__cell { background: #f7fafc; color: var(--yl-ink-2); font-weight: 600; }
+.el-tag { border-radius: 6px; }
+.el-button { border-radius: 8px; }
+.el-dialog { border-radius: var(--yl-radius); }
+
+/* 页面切换过渡 */
+.fade-slide-enter-active { transition: all 0.25s ease; }
+.fade-slide-enter-from { opacity: 0; transform: translateY(6px); }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #cfdde4; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #b3c8d1; }

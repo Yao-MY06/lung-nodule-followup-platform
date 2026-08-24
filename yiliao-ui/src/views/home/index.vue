@@ -1,30 +1,37 @@
 <template>
   <div class="home-page">
-    <el-card class="welcome-card" shadow="never">
-      <div class="welcome-text">
-        <h2>你好，{{ auth.user?.realName || '用户' }}</h2>
-        <p>欢迎使用肺结节/肺癌患者管理系统</p>
+    <!-- 欢迎条：青蓝渐变 hero -->
+    <section class="hero">
+      <div>
+        <h2>{{ greeting }}，{{ auth.user?.realName || '用户' }}</h2>
+        <p>{{ todayStr }} · 欢迎使用肺结节/肺癌患者管理系统</p>
       </div>
-    </el-card>
+      <div class="hero-mark" aria-hidden="true"></div>
+    </section>
 
-    <el-row :gutter="16" class="stat-row" v-loading="loading">
+    <!-- 统计卡：图标圆 + 强调色 -->
+    <el-row :gutter="20" class="stat-row" v-loading="loading">
       <el-col :span="6" v-for="card in statCards" :key="card.label">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">{{ card.label }}</div>
-          <div class="stat-value" :class="{ danger: card.danger }">{{ card.value }}</div>
-        </el-card>
+        <div class="stat-card" :class="card.tone">
+          <div class="stat-icon"><el-icon><component :is="card.icon" /></el-icon></div>
+          <div>
+            <div class="stat-value">{{ card.value }}</div>
+            <div class="stat-label">{{ card.label }}</div>
+          </div>
+        </div>
       </el-col>
     </el-row>
 
-    <el-card class="shortcut-card" shadow="never">
-      <template #header>快捷入口</template>
+    <!-- 快捷入口：大色块卡片 -->
+    <section class="shortcut-card">
+      <div class="shortcut-head">快捷入口</div>
       <div class="shortcut-list">
-        <el-button v-for="item in shortcuts" :key="item.path" size="large" @click="go(item.path)">
+        <button v-for="item in shortcuts" :key="item.path" class="shortcut-tile" @click="go(item.path)">
           <el-icon class="shortcut-icon"><component :is="item.icon" /></el-icon>
-          {{ item.label }}
-        </el-button>
+          <span>{{ item.label }}</span>
+        </button>
       </div>
-    </el-card>
+    </section>
   </div>
 </template>
 
@@ -41,11 +48,15 @@ const auth = useAuthStore()
 const loading = ref(false)
 const stats = ref(null)
 
+const hour = new Date().getHours()
+const greeting = hour < 12 ? '上午好' : hour < 18 ? '下午好' : '晚上好'
+const todayStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })
+
 const statCards = computed(() => [
-  { label: '在管患者数', value: stats.value?.managingCount ?? '-' },
-  { label: '进行中计划', value: stats.value?.activePlanCount ?? '-' },
-  { label: '逾期任务', value: stats.value?.overdueTaskCount ?? '-', danger: true },
-  { label: '预警', value: stats.value?.alertCount ?? '-' }
+  { label: '在管患者数', value: stats.value?.managingCount ?? '-', icon: UserFilled, tone: 'tone-primary' },
+  { label: '进行中计划', value: stats.value?.activePlanCount ?? '-', icon: Calendar, tone: 'tone-success' },
+  { label: '逾期任务', value: stats.value?.overdueTaskCount ?? '-', icon: Document, tone: 'tone-danger' },
+  { label: '预警', value: stats.value?.alertCount ?? '-', icon: DataAnalysis, tone: 'tone-warning' }
 ])
 
 const shortcuts = [
@@ -64,7 +75,6 @@ onMounted(async () => {
   try {
     stats.value = await overview()
   } catch {
-    // 接口失败已由拦截器弹错，统计卡显示 "-" 兜底
     stats.value = null
   } finally {
     loading.value = false
@@ -73,49 +83,94 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.home-page {
-  padding: 4px;
-}
-.welcome-card {
-  margin-bottom: 16px;
-}
-.welcome-text h2 {
-  margin: 0 0 4px;
-  font-size: 20px;
-  color: #303133;
-}
-.welcome-text p {
-  margin: 0;
-  color: #909399;
-}
-.stat-row {
-  margin-bottom: 16px;
-}
-.stat-card {
-  text-align: center;
-}
-.stat-label {
-  font-size: 14px;
-  color: #909399;
-}
-.stat-value {
-  margin-top: 8px;
-  font-size: 28px;
-  font-weight: 600;
-  color: #303133;
-}
-.stat-value.danger {
-  color: #f56c6c;
-}
-.shortcut-list {
+.home-page { padding: 4px; }
+
+/* Hero 欢迎条 */
+.hero {
+  position: relative;
+  overflow: hidden;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  border-radius: var(--yl-radius);
+  color: #eaf6f5;
+  background: linear-gradient(120deg, #0a5a55 0%, #0d7e76 55%, #15648f 100%);
+  box-shadow: var(--yl-shadow);
+}
+.hero h2 { margin: 0 0 6px; font-size: 24px; font-weight: 700; letter-spacing: 1px; }
+.hero p { margin: 0; font-size: 13px; color: rgba(234, 246, 245, 0.85); }
+.hero-mark {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, transparent 40%, rgba(255, 255, 255, 0.12) 41% 44%, transparent 45%),
+    radial-gradient(circle, transparent 62%, rgba(255, 255, 255, 0.09) 63% 66%, transparent 67%);
+  flex: none;
+}
+
+/* 统计卡 */
+.stat-row { margin-bottom: 20px; }
+.stat-card {
+  display: flex;
+  align-items: center;
   gap: 16px;
-  flex-wrap: wrap;
+  padding: 20px 22px;
+  background: #fff;
+  border: 1px solid var(--yl-line);
+  border-radius: var(--yl-radius);
+  box-shadow: var(--yl-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.shortcut-list .el-button {
-  margin-left: 0;
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--yl-shadow-hover); }
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 22px;
+  flex: none;
 }
-.shortcut-icon {
-  margin-right: 4px;
+.stat-value { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; color: var(--yl-ink); }
+.stat-label { margin-top: 2px; font-size: 13px; color: var(--yl-muted); }
+.tone-primary .stat-icon { background: var(--el-color-primary-light-9); color: var(--yl-primary); }
+.tone-success .stat-icon { background: #e8f6ef; color: var(--yl-success); }
+.tone-danger  .stat-icon { background: #fbeaea; color: var(--yl-danger); }
+.tone-warning .stat-icon { background: #fdf3e4; color: var(--yl-warning); }
+.tone-danger  .stat-value { color: var(--yl-danger); }
+
+/* 快捷入口 */
+.shortcut-card {
+  background: #fff;
+  border: 1px solid var(--yl-line);
+  border-radius: var(--yl-radius);
+  box-shadow: var(--yl-shadow);
+  padding: 20px 22px 24px;
 }
+.shortcut-head { font-size: 16px; font-weight: 600; color: var(--yl-ink); margin-bottom: 16px; }
+.shortcut-list { display: flex; gap: 16px; flex-wrap: wrap; }
+.shortcut-tile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 22px;
+  border: 1px solid var(--yl-line);
+  border-radius: 12px;
+  background: #fafcfd;
+  font-size: 15px;
+  color: var(--yl-ink-2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.shortcut-tile:hover {
+  border-color: var(--el-color-primary-light-7);
+  background: var(--el-color-primary-light-9);
+  color: var(--yl-primary);
+  transform: translateY(-2px);
+}
+.shortcut-icon { font-size: 20px; }
 </style>

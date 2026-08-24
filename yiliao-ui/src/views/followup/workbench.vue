@@ -1,6 +1,8 @@
 <template>
   <div class="followup-workbench">
-    <div class="toolbar">
+    <h2 class="yl-page-title">随访工作台</h2>
+    <p class="yl-page-sub">按计划日期排序 · 逾期与失访优先跟进</p>
+    <div class="toolbar yl-card toolbar-card">
       <el-tabs v-model="query.status" class="status-tabs" @tab-change="onTabChange">
         <el-tab-pane label="全部" name="" />
         <el-tab-pane label="未到期" name="0" />
@@ -379,6 +381,10 @@ loadData()
 <style scoped>
 .followup-workbench {
   padding: 16px;
+}
+.toolbar-card {
+  padding: 8px 20px 0;
+  margin-bottom: 16px;
 }
 .toolbar {
   display: flex;
