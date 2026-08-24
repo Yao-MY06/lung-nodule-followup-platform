@@ -116,6 +116,9 @@
 - **编译 `-parameters`**：parent compiler 已开；`@RequestParam` 按名绑定依赖它，新模块勿覆盖此配置。
 - **rocketmq 配置在根级**：不是 `spring.rocketmq`；rocketmq-spring 2.3.1 在 Boot 3.4 下 RocketMQTemplate 自动装配失效 → followup 用 MqProducerConfig 手工装配（注意 @Bean 默认 destroyMethod 推断会因 destroy() 私有签名报错，显式不写 destroyMethod）。
 - **SNAPSHOT 陈旧 jar**：common/api 改接口后增量 install 可能留残件（运行期 NoSuchMethodError/ClassNotFound），必须重装对应模块并核对 ~/.m2 中 jar 时间戳/内容。
+- **Spring AI 流式工具调用丢请求上下文（R1 实测缺陷，待修）**：ChatService 用 `.stream()` 时 @Tool 方法在 Reactor boundedElastic 线程执行，RequestContextHolder（Tomcat 线程 ThreadLocal）为空 → PatientTools 必抛 401。修复方向：X-User-Id 在 chat() 入口快照显式传入工具对象；单测覆盖不到，需流式集成测试。
+- **Spring AI 接非 OpenAI 厂商**：GLM 兼容端点是 `{base-url}/chat/completions`（无 `/v1`），必须加 `spring.ai.openai.chat.completions-path=/chat/completions`，否则 404 → 抽取报 24002。
+- **docker 卷属主**：apache/rocketmq 镜像以 uid 3000 非 root 运行，named volume 默认 root 属主会导致 broker 启动即崩、且真实异常被关闭路径 NPE 掩盖——新加挂载卷的服务先 `chown` 对应 uid；另注意 compose 端口映射避开宿主机上运行的服务端口（8081 曾与 auth 冲突）。
 
 ## 更新记录
 

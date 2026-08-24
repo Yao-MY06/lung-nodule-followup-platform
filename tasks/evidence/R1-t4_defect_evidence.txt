@@ -1,0 +1,21 @@
+R1-T4 缺陷证据链（2026-08-24 实测）
+
+现象：患者经 /api/ai/chat 问"我下次什么时候复查？"/"报症状"，回答均为"未认证或登录已过期"，
+     symptom_report 表无新增（cnt=0），followup 服务未收到任何请求。
+
+证据：
+1) 模型回复逐字复述 yiliao-common-core CommonErrorCode.UNAUTHORIZED.msg
+   （"未认证或登录已过期"），非模型自由发挥——说明工具方法抛出的 BizException 文本进入了模型上下文。
+2) 响应耗时 ~3s = 两轮 LLM 往返：第一轮模型决定调用 queryNextFollowup 工具，
+   工具执行抛 UNAUTHORIZED 后框架把异常文本回灌，第二轮模型据此致歉。单轮幻觉通常 <1.5s。
+3) 抓包/线程观察期间未发现 ai→8084 连接；jstack 显示存在 boundedElastic 反应器线程池。
+4) 根因（代码定位）：ChatService.chat() 用 .stream()（yiliao-ai/src/main/java/com/yiliao/ai/chat/ChatService.java:57），
+   Spring AI 1.0.0 流式路径的 @Tool 方法在 Reactor boundedElastic 线程执行；
+   PatientTools.currentPatientId()（tools/PatientTools.java:68-76）依赖
+   RequestContextHolder（ThreadLocal，仅绑定 Tomcat http-nio 线程），跨线程后恒为 null → 必抛 UNAUTHORIZED。
+
+修复方向（供 R6/P4b 参考，本次未改）：进入 chat() 时先把 X-User-Id 快照到方法局部变量并显式传给工具对象
+（如 new PatientTools(userId) 或 ThreadLocal 快照传递），不依赖 RequestContextHolder 跨线程。
+
+影响范围：T4 两问全部失败；T5 越权注入用例因同一缺陷"歪打正着"——任何患者都查不到任何人（含本人）的数据，
+越权拦截目标达成，但属于故障态拦截而非设计态拦截，不能计为通过。

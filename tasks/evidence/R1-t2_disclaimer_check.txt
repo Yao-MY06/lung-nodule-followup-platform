@@ -1,0 +1,44 @@
+四段标题: 这是什么/风险怎么看/下一步建议/注意事项 全部出现
+免责语(服务端强制追加,done事件前独立delta): —— 以上内容为 AI 辅助参考，不构成诊断意见，请以主治医生意见为准。
+
+SSE尾部原文:
+不适
+
+event:delta
+data:或
+
+event:delta
+data:症状
+
+event:delta
+data:变化
+
+event:delta
+data:，
+
+event:delta
+data:请
+
+event:delta
+data:及时
+
+event:delta
+data:与
+
+event:delta
+data:医生
+
+event:delta
+data:联系
+
+event:delta
+data:。
+
+event:delta
+data:
+data:
+data:—— 以上内容为 AI 辅助参考，不构成诊断意见，请以主治医生意见为准。
+
+event:done
+data:[DONE]
+

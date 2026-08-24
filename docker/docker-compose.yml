@@ -72,7 +72,7 @@ services:
     command: sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/conf/broker.conf
     ports:
       - "10911:10911"
-      - "8081:8081"   # proxy 端口预留
+      - "18081:8081"  # proxy 端口预留（宿主机 8081 被 auth-service 占用，改映射 18081）
     volumes:
       - ./rocketmq/broker.conf:/home/rocketmq/conf/broker.conf:ro
       - rmq-broker-logs:/home/rocketmq/logs
