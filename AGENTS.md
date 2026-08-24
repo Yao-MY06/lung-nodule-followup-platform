@@ -111,6 +111,11 @@
 - **record**：作为返回体时访问器是 `data()/code()`，不是 `getXxx()`。
 - **JDK 25**：Mockito/ByteBuddy 需 `-Dnet.bytebuddy.experimental=true`（parent surefire 已配）；Lombok 兼容未验证，暂不引入。
 - **AES-256**：密钥必须恰好 32 字节（base64 解码后），开发占位密钥曾在长度上出错。
+- **SC 2023.0.3 校验器**：拒绝 Boot 3.4.5（SCA 矩阵实际允许）——服务需 `spring.cloud.compatibility-verifier.enabled=false`，九个 yml 已配。
+- **Feign 直连**：无 Nacos 时契约需 `url = "${yiliao.feign.{svc}-url:http://localhost:{port}}"` 占位符（已全量加上），否则报缺 loadbalancer。
+- **编译 `-parameters`**：parent compiler 已开；`@RequestParam` 按名绑定依赖它，新模块勿覆盖此配置。
+- **rocketmq 配置在根级**：不是 `spring.rocketmq`；rocketmq-spring 2.3.1 在 Boot 3.4 下 RocketMQTemplate 自动装配失效 → followup 用 MqProducerConfig 手工装配（注意 @Bean 默认 destroyMethod 推断会因 destroy() 私有签名报错，显式不写 destroyMethod）。
+- **SNAPSHOT 陈旧 jar**：common/api 改接口后增量 install 可能留残件（运行期 NoSuchMethodError/ClassNotFound），必须重装对应模块并核对 ~/.m2 中 jar 时间戳/内容。
 
 ## 更新记录
 
