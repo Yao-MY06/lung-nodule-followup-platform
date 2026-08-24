@@ -21,14 +21,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class SymptomController {
 
     private final SymptomService symptomService;
+    private final com.yiliao.followup.security.PatientDataGuard dataGuard;
 
-    public SymptomController(SymptomService symptomService) {
+    public SymptomController(SymptomService symptomService, com.yiliao.followup.security.PatientDataGuard dataGuard) {
         this.symptomService = symptomService;
+        this.dataGuard = dataGuard;
     }
 
     @Operation(summary = "症状上报（severity≥3 触发预警标记，P3 接事件推送）")
     @PostMapping("/patients/{patientId}/symptoms")
     public Result<Long> report(@PathVariable Long patientId, @jakarta.validation.Valid @RequestBody SymptomRequest request) {
+        dataGuard.requireOwnOrStaff(patientId);
         return Result.ok(symptomService.report(patientId, request.symptom(), request.severity(),
                 request.description(), request.source()));
     }

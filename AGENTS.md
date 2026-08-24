@@ -68,6 +68,7 @@
 - **AI 只起草、人确认**：AI 结构化抽取结果只是草稿，必须经医生人工确认后才写入 `nodule`/`nodule_snapshot`——医疗系统安全底线，违反会导致误诊风险。
 - **AI 输出必须标注"辅助参考"**：报告解读、RAG 问答末尾附免责语，不替代诊断；RAG 回答必须附指南出处，知识库不可用时明确告知而非自由发挥。
 - **患者数据权限**：患者端接口仅可访问本人数据，服务端强制校验（不能只靠前端隐藏）；Tool Calling 工具内部以当前登录患者身份查询，防越权。
+  **已落地（2026-08-23）**：网关 PATIENT 白名单（AuthGlobalFilter）+ followup/nodule `PatientDataGuard`（按 X-User-Id 解析本人档案比对）+ patient `PatientRoleGuard`（员工接口拒患者、详情归属校验）+ 单测证据（越权用例 403）。
 - **消息幂等**：提醒消息 `biz_key = taskId + remindType` 唯一键 + Redis SETNX，重复投递不得重复发短信。
 - **防重生成**：随访计划生成用 Redisson 锁（key=patientId）+ `followup_plan` 唯一索引兜底，患者同一时刻只有一个进行中计划。
 - **随访升级规则**：结节增大或实性成分增加 ≥2mm 必须触发随访级别升级评估（来自 2024 中国专家共识）。

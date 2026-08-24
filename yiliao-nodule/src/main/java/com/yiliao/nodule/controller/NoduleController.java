@@ -40,30 +40,35 @@ public class NoduleController {
     private final CompareService compareService;
     private final com.yiliao.nodule.confirm.ConfirmService confirmService;
     private final com.yiliao.api.ai.AiApi aiApi;
+    private final com.yiliao.nodule.security.PatientDataGuard dataGuard;
 
     public NoduleController(NoduleMapper noduleMapper, NoduleSnapshotMapper snapshotMapper,
                             ExamReportMapper reportMapper, CompareService compareService,
                             com.yiliao.nodule.confirm.ConfirmService confirmService,
-                            com.yiliao.api.ai.AiApi aiApi) {
+                            com.yiliao.api.ai.AiApi aiApi,
+                            com.yiliao.nodule.security.PatientDataGuard dataGuard) {
         this.noduleMapper = noduleMapper;
         this.snapshotMapper = snapshotMapper;
         this.reportMapper = reportMapper;
         this.compareService = compareService;
         this.confirmService = confirmService;
         this.aiApi = aiApi;
+        this.dataGuard = dataGuard;
     }
 
-    @Operation(summary = "登记结节")
+    @Operation(summary = "登记结节（员工操作）")
     @PostMapping("/nodules")
     public Result<Long> register(@Valid @RequestBody Nodule nodule) {
+        dataGuard.requireStaff();
         nodule.setId(null);
         noduleMapper.insert(nodule);
         return Result.ok(nodule.getId());
     }
 
-    @Operation(summary = "录入复查快照（触发对比分析）")
+    @Operation(summary = "录入复查快照（员工操作，触发对比分析）")
     @PostMapping("/snapshots")
     public Result<CompareService.CompareVO> snapshot(@Valid @RequestBody NoduleSnapshot snapshot) {
+        dataGuard.requireStaff();
         snapshot.setId(null);
         snapshotMapper.insert(snapshot);
         return Result.ok(compareService.compare(snapshot.getNoduleId()));
@@ -72,25 +77,29 @@ public class NoduleController {
     @Operation(summary = "结节纵向趋势（直径/体积/密度序列）")
     @GetMapping("/nodules/{id}/trend")
     public Result<List<NoduleSnapshot>> trend(@PathVariable Long id) {
+        dataGuard.requireStaff();
         return Result.ok(compareService.trend(id));
     }
 
     @Operation(summary = "最近两次快照对比（是否≥2mm、建议动作）")
     @GetMapping("/nodules/{id}/compare")
     public Result<CompareService.CompareVO> compare(@PathVariable Long id) {
+        dataGuard.requireStaff();
         return Result.ok(compareService.compare(id));
     }
 
-    @Operation(summary = "患者结节列表")
+    @Operation(summary = "患者结节列表（患者仅可查本人）")
     @GetMapping("/patients/{patientId}/nodules")
     public Result<List<Nodule>> byPatient(@PathVariable Long patientId) {
+        dataGuard.requireOwnOrStaff(patientId);
         return Result.ok(noduleMapper.selectList(new LambdaQueryWrapper<Nodule>()
                 .eq(Nodule::getPatientId, patientId)));
     }
 
-    @Operation(summary = "报告录入（AI 抽取 P4 接入）")
+    @Operation(summary = "报告录入（员工操作，AI 抽取 P4）")
     @PostMapping("/exam/reports")
     public Result<Long> createReport(@Valid @RequestBody ReportCreateRequest request) {
+        dataGuard.requireStaff();
         ExamReport report = new ExamReport();
         report.setPatientId(request.patientId());
         report.setReportType(request.reportType());
@@ -103,11 +112,12 @@ public class NoduleController {
         return Result.ok(report.getId());
     }
 
-    @Operation(summary = "报告列表（按患者/类型）")
+    @Operation(summary = "报告列表（患者仅可查本人）")
     @GetMapping("/exam/reports")
     public Result<PageResult<ExamReport>> reports(@RequestParam Long patientId,
                                                   @RequestParam(required = false) Integer reportType,
                                                   @Valid PageQuery query) {
+        dataGuard.requireOwnOrStaff(patientId);
         return Result.ok(PageResults.of(reportMapper.selectPage(
                 Page.of(query.getPage(), query.getSize()),
                 new LambdaQueryWrapper<ExamReport>()
@@ -118,9 +128,10 @@ public class NoduleController {
 
     // ── F1 确认链路（specs/flows/F1 第 2~3 步；依赖见类头构造器） ──
 
-    @Operation(summary = "触发 AI 抽取（草稿回填 structured_json，状态 0→1，不入库）")
+    @Operation(summary = "触发 AI 抽取（员工操作，草稿回填 structured_json，不入库）")
     @PostMapping("/exam/reports/{id}/extract")
     public Result<com.yiliao.api.ai.dto.NoduleExtract> extract(@PathVariable Long id) {
+        dataGuard.requireStaff();
         ExamReport report = reportMapper.selectById(id);
         if (report == null) {
             return Result.fail(com.yiliao.nodule.error.NoduleErrorCode.REPORT_NOT_FOUND);
@@ -139,6 +150,7 @@ public class NoduleController {
             @PathVariable Long id,
             @RequestParam(required = false, defaultValue = "false") boolean newNodule,
             @RequestParam(required = false) Integer isNewFlag) {
+        dataGuard.requireStaff();
         return Result.ok(confirmService.confirm(id, newNodule, isNewFlag));
     }
 

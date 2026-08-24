@@ -121,4 +121,61 @@ class AuthGlobalFilterTest {
         filter.filter(exchange, capturingChain()).block();
         assertNotNull(chainCaptured.get(), "Redis 故障应 fail-open 放行");
     }
+
+    // ── 患者角色白名单（specs/modules/gateway.md §4.3，红区） ──
+
+    private String patientToken() {
+        return jwtTokenService.issueAccessToken(88L, "patient01", 4, List.of("PATIENT")).token();
+    }
+
+    @Test
+    void patientBlockedFromStaffPaths() {
+        when(redisTemplate.hasKey(anyString())).thenReturn(Mono.just(false));
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/api/stats/overview")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + patientToken()).build());
+        filter.filter(exchange, capturingChain()).block();
+        assertEquals(HttpStatus.FORBIDDEN, exchange.getResponse().getStatusCode());
+        assertEquals(null, chainCaptured.get());
+    }
+
+    @Test
+    void patientBlockedFromWorkbench() {
+        when(redisTemplate.hasKey(anyString())).thenReturn(Mono.just(false));
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/api/followup/workbench")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + patientToken()).build());
+        filter.filter(exchange, capturingChain()).block();
+        assertEquals(HttpStatus.FORBIDDEN, exchange.getResponse().getStatusCode());
+    }
+
+    @Test
+    void patientAllowedOnPortalPath() {
+        when(redisTemplate.hasKey(anyString())).thenReturn(Mono.just(false));
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/api/patient/archives/my")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + patientToken()).build());
+        filter.filter(exchange, capturingChain()).block();
+        assertNotNull(chainCaptured.get(), "患者访问本人档案接口应放行");
+    }
+
+    @Test
+    void patientAllowedOnOwnPlanTimeline() {
+        when(redisTemplate.hasKey(anyString())).thenReturn(Mono.just(false));
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/api/followup/plans/1001")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + patientToken()).build());
+        filter.filter(exchange, capturingChain()).block();
+        assertNotNull(chainCaptured.get(), "患者访问计划时间轴应过网关（归属校验在服务端）");
+    }
+
+    @Test
+    void staffPassesStaffPaths() {
+        when(redisTemplate.hasKey(anyString())).thenReturn(Mono.just(false));
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/api/stats/overview")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken()).build());
+        filter.filter(exchange, capturingChain()).block();
+        assertNotNull(chainCaptured.get(), "员工访问管理面应放行");
+    }
 }

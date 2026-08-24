@@ -217,9 +217,10 @@ public class ArchiveService {
         return risk != null && risk.hasAnyRiskFactor();
     }
 
-    /** 出参脱敏（specs/global/10 §9）：身份证解密后脱敏、手机号脱敏。 */
+    /** 出参脱敏（specs/global/10 §9）：身份证解密后脱敏、手机号脱敏。患者调用时强制本人归属。 */
     public MaskedArchiveVO detailMasked(Long id) {
         PatientArchive archive = requireArchive(id);
+        com.yiliao.patient.security.PatientRoleGuard.requireOwnArchive(archive.getUserId());
         PatientRiskFactor risk = riskFactorMapper.selectOne(new LambdaQueryWrapper<PatientRiskFactor>()
                 .eq(PatientRiskFactor::getPatientId, id));
         return new MaskedArchiveVO(

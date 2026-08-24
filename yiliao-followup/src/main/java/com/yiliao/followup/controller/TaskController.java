@@ -28,21 +28,25 @@ import java.time.LocalDate;
 public class TaskController {
 
     private final TaskService taskService;
+    private final com.yiliao.followup.security.PatientDataGuard dataGuard;
 
-    public TaskController(TaskService taskService) {
+    public TaskController(TaskService taskService, com.yiliao.followup.security.PatientDataGuard dataGuard) {
         this.taskService = taskService;
+        this.dataGuard = dataGuard;
     }
 
     @Operation(summary = "随访工作台（状态筛选：0未到期 1临期 2逾期 3已完成 4失访）")
     @GetMapping("/workbench")
     public Result<PageResult<FollowupTask>> workbench(@RequestParam(required = false) Integer status,
                                                       @Valid PageQuery query) {
+        dataGuard.requireStaff();
         return Result.ok(taskService.workbench(status, query));
     }
 
     @Operation(summary = "下次随访任务")
     @GetMapping("/patients/{patientId}/next")
     public Result<NextFollowupDTO> next(@PathVariable Long patientId) {
+        dataGuard.requireOwnOrStaff(patientId);
         return Result.ok(taskService.nextFollowup(patientId));
     }
 
@@ -51,6 +55,7 @@ public class TaskController {
     public Result<Void> adjust(@PathVariable Long id,
                                @RequestParam(required = false) LocalDate planDate,
                                @RequestParam(required = false) String itemsJson) {
+        dataGuard.requireStaff();
         taskService.adjust(id, planDate, itemsJson);
         return Result.ok();
     }
@@ -58,6 +63,7 @@ public class TaskController {
     @Operation(summary = "提交随访记录（完成任务）")
     @PutMapping("/tasks/{id}/record")
     public Result<Void> record(@PathVariable Long id, @Valid @RequestBody RecordRequest request) {
+        dataGuard.requireStaff();
         taskService.completeTask(id, request.followupType(), request.content(),
                 request.resultSummary(), request.nextAdvice(), request.operatorId());
         return Result.ok();

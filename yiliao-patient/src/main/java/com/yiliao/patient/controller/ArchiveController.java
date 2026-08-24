@@ -5,6 +5,7 @@ import com.yiliao.common.core.page.PageResult;
 import com.yiliao.common.core.result.Result;
 import com.yiliao.patient.dto.CreateArchiveRequest;
 import com.yiliao.patient.entity.PatientArchive;
+import com.yiliao.patient.security.PatientRoleGuard;
 import com.yiliao.patient.service.ArchiveService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -31,18 +32,20 @@ public class ArchiveController {
         this.archiveService = archiveService;
     }
 
-    @Operation(summary = "建档（可选自动生成随访计划；P4 升级 Seata）")
+    @Operation(summary = "建档（可选自动生成随访计划；员工操作）")
     @PostMapping("/archives")
     public Result<ArchiveService.CreateResult> create(@Valid @RequestBody CreateArchiveRequest request) {
+        PatientRoleGuard.requireStaff();
         return Result.ok(archiveService.create(request));
     }
 
-    @Operation(summary = "档案分页（按医生/阶段/关键字）")
+    @Operation(summary = "档案分页（按医生/阶段/关键字；员工操作）")
     @GetMapping("/archives")
     public Result<PageResult<PatientArchive>> page(@RequestParam(required = false) Long doctorId,
                                                    @RequestParam(required = false) String stageLabel,
                                                    @RequestParam(required = false) String keyword,
                                                    @Valid PageQuery query) {
+        PatientRoleGuard.requireStaff();
         return Result.ok(archiveService.page(doctorId, stageLabel, keyword, query));
     }
 
@@ -52,9 +55,10 @@ public class ArchiveController {
         return Result.ok(archiveService.detailMasked(id));
     }
 
-    @Operation(summary = "变更阶段标签（状态机校验）")
+    @Operation(summary = "变更阶段标签（状态机校验；员工操作）")
     @PutMapping("/archives/{id}/stage")
     public Result<Void> changeStage(@PathVariable Long id, @RequestParam String stageLabel) {
+        PatientRoleGuard.requireStaff();
         archiveService.changeStage(id, stageLabel);
         return Result.ok();
     }
@@ -73,9 +77,10 @@ public class ArchiveController {
     public record MyArchiveVO(Long id, String patientNo, String name, String stageLabel) {
     }
 
-    @Operation(summary = "变更主管医生")
+    @Operation(summary = "变更主管医生（员工操作）")
     @PutMapping("/archives/{id}/doctor")
     public Result<Void> changeDoctor(@PathVariable Long id, @RequestParam Long doctorId) {
+        PatientRoleGuard.requireStaff();
         archiveService.changeDoctor(id, doctorId);
         return Result.ok();
     }

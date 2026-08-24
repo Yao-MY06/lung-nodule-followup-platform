@@ -45,6 +45,21 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     /** 服务间内部接口，外部一律 404（specs/global/30 §5） */
     private static final String INTERNAL_PATTERN = "/api/*/internal/**";
 
+    /**
+     * PATIENT 角色白名单（specs/modules/gateway.md §4.3）：患者只可走患者面路径。
+     * 其余路径（工作台/规则/统计/报告录入等管理面）患者一律 403。
+     */
+    private static final String[] PATIENT_ALLOWED = {
+            "/api/portal/**",
+            "/api/patient/archives/my",
+            "/api/followup/plans/*",
+            "/api/followup/patients/*/next",
+            "/api/followup/patients/*/symptoms",
+            "/api/ai/chat", "/api/ai/chat/sessions/**", "/api/ai/report/interpret",
+            "/api/notify/messages", "/api/notify/messages/*/read",
+            "/api/auth/logout", "/api/auth/me", "/api/auth/refresh"
+    };
+
     private final JwtTokenService jwtTokenService;
     private final ReactiveStringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -92,6 +107,13 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                         return writeResult(exchange, HttpStatus.UNAUTHORIZED,
                                 Result.fail(CommonErrorCode.UNAUTHORIZED));
                     }
+                    // 患者角色白名单检查（specs/modules/gateway.md §4.3）
+                    if (payload.roles().contains(YiliaoConstants.ROLE_PATIENT)
+                            && !isPatientAllowed(path)) {
+                        log.warn("患者访问白名单外路径被拦截 path={}", path);
+                        return writeResult(exchange, HttpStatus.FORBIDDEN,
+                                Result.fail(CommonErrorCode.FORBIDDEN));
+                    }
                     ServerWebExchange mutated = withTraceId(exchange).mutate()
                             .request(builder -> {
                                 builder.header(YiliaoConstants.HEADER_USER_ID, String.valueOf(payload.userId()));
@@ -110,6 +132,15 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
     private boolean isWhitelisted(String path) {
         for (String pattern : WHITELIST) {
+            if (pathMatcher.match(pattern, path)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isPatientAllowed(String path) {
+        for (String pattern : PATIENT_ALLOWED) {
             if (pathMatcher.match(pattern, path)) {
                 return true;
             }

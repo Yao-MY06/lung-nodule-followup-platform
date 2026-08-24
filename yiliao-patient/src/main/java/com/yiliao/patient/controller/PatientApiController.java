@@ -32,4 +32,14 @@ public class PatientApiController implements PatientApi {
         archiveService.requireArchive(id);
         return Result.ok(archiveService.hasRiskFactor(id));
     }
+
+    @Override
+    public Result<ArchiveDTO> getArchiveByUserId(Long userId) {
+        PatientArchive archive = archiveService.findMine(userId);
+        if (archive == null) {
+            return Result.ok(null);
+        }
+        return Result.ok(new ArchiveDTO(archive.getId(), archive.getPatientNo(), archive.getName(),
+                archive.getStageLabel(), archive.getDoctorId(), archive.getSourceType()));
+    }
 }

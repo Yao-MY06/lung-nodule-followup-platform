@@ -35,6 +35,7 @@
 1. JWT 校验失败/过期/在黑名单 → `401`；角色不匹配 → `403`（错误体遵循【global/10 §2】）。
 2. 限流（Sentinel）：全局 QPS 阈值 + 按用户维度（`X-User-Id`）阈值；超限返回 `11001 触发限流`。
 3. `/api/portal/**`（患者端）要求角色含 PATIENT，其余请求仅要求有效 Token，权限由各服务 `@PreAuthorize` 细化。
+   **已实现（2026-08-23）**：PATIENT 白名单落地 AuthGlobalFilter——患者仅可走：portal 路径、`/api/patient/archives/my`、本人计划时间轴与下次随访、症状上报、AI 聊天/解读、我的消息、auth 注销/刷新/me；其余路径 403。服务侧归属校验由 followup/nodule 的 `PatientDataGuard` 与 patient 的 `PatientRoleGuard` 承担（详见各模块禁止行为）。
 
 ## 5. 异常场景
 
