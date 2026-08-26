@@ -16,3 +16,5 @@ dist/
 
 docker/data/
 .zcode/
+*_token.txt
+R1-token.txt
