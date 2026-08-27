@@ -17,9 +17,10 @@ spring:
         enabled: false
         server-addr: localhost:8848
   # statistics 无 Redis 依赖，排除 Redisson 自动装配避免启动失败（specs/modules/statistics.md §7）
+  # 注意 redisson-spring-boot-starter 3.37.0 的自动配置类是 V2（旧类名不存在，exclude 会报"非自动配置类"启动失败）
   autoconfigure:
     exclude:
-      - org.redisson.spring.starter.RedissonAutoConfiguration
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
 
