@@ -1,0 +1,56 @@
+T4 回归：ai 服务启动失败证据链（缺陷定位）
+=============================================
+记录时间：2026-09-05 20:53 ~ 20:55 (UTC+8)
+执行者：ZCode 子代理（T4 流式工具回归）
+
+一、启动命令（与执行书一致；LLM Key 经环境变量注入，未回显、未落盘）
+  set -a; . /f/bc/ainew/.env; set +a
+  mvn -q -f /f/bc/yiliao/pom.xml -pl yiliao-ai spring-boot:run \
+    -Dspring-boot.run.arguments="--spring.datasource.url=jdbc:mysql://localhost:3307/yiliao_ai?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+  日志：tasks/evidence/T4-ai-run.log（88 行，已完整留存；零 Key 泄漏，见第八节）
+
+二、时间线
+  20:53  启动（后台），健康轮询 localhost:8086/actuator/health
+  20:54:35.878  Application run failed（上下文刷新中止，进程退出码 1）
+  20:55  确认 8086 无监听（进程已退出），健康轮询全程无响应
+
+三、失败根因栈（T4-ai-run.log 第 26/33/56/70/74 行）
+  UnsatisfiedDependencyException: chatService 构造参数 2（patientTools）
+  → BeanCreationException: patientTools 实例化失败
+  → BeanInstantiationException: No default constructor found
+  → NoSuchMethodException: com.yiliao.ai.tools.PatientTools.<init>()
+
+四、源码/字节码对照（排除陈旧构建）
+  源文件时间戳：src/main/java/com/yiliao/ai/tools/PatientTools.java = 17:43
+  字节码时间戳：target/classes/.../PatientTools.class    = 17:44（晚于源码，且 spring-boot:run
+  默认在 test-compile 阶段重新编译，target 与源码一致）
+  javap -p 输出（JDK 25，F:\bc\yiliao\yiliao-ai\target\classes）：
+    public com.yiliao.ai.tools.PatientTools(FollowupApi, NoduleApi);
+    private com.yiliao.ai.tools.PatientTools(FollowupApi, NoduleApi, Long, boolean);
+    public PatientTools forPatient(Long);
+    （类上标注 @Component，PatientTools.java:23）
+
+五、Spring 行为判定
+  @Component 组件扫描 + 类内声明 2 个构造器（无无参构造器、无 @Autowired 标注）→
+  AutowiredAnnotationBeanPostProcessor 无法确定候选构造器 → 走 instantiateBean() 默认
+  无参构造路径 → NoSuchMethodException。确定性缺陷，与 LLM Key/数据源/环境变量无关
+  （失败发生在 LLM 连通性验证之前的上下文装配阶段）。
+
+六、为何 mvn test 全绿未拦截
+  yiliao-ai 全部测试为纯 Mockito 单测（无 @SpringBootTest/@MockBean）：
+  - ChatServiceTest.java:42  @Mock private PatientTools patientTools;
+  - PatientToolsTest.java:50/63/74/84/94  直接 new PatientTools(followupApi, noduleApi)
+  无任何用例装载 Spring 上下文 → 上下文装配失败对测试套件不可见
+  （与 R1 缺陷"单测未覆盖流式集成路径"同模式：测试盲区，非测试失败）。
+
+七、修复方向（供主线决策，本次未改动任何代码）
+  方案A：public 双参构造器加 @Autowired（最小改动，保留 @Component 基座 bean）
+  方案B：去掉 @Component，ChatService 注入 FollowupApi/NoduleApi 自行
+         new PatientTools(a,b).forPatient(id)（每次请求新建，语义最贴合现有 forPatient 设计）
+  方案C：只保留 4 参私有构造器 + 静态工厂，消除多构造器歧义
+  建议随修：补一个上下文装配冒烟测试（@SpringBootTest 或 ApplicationContextRunner），
+  把"启动失败"纳入 mvn test 可见范围。
+
+八、Key 泄漏自查（2026-09-05 20:58）
+  grep -rlE "sk-[a-zA-Z0-9]{20,}" tasks/evidence/T4-* tasks/T4-*.md → 0 个文件
+  T4-ai-run.log 连字面 "sk-" 均零匹配（启动失败发生在任何 LLM/HTTP 出网之前）。

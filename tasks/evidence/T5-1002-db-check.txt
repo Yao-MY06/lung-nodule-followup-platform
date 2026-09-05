@@ -1,0 +1,17 @@
+ERROR 1054 (42S22) at line 4: Unknown column 'patient_name' in 'field list'
+id	patient_id	plan_date	items_json	status
+11	1001	2027-02-24	{"items": ["胸部CT"]}	0
+12	1001	2028-02-24	{"items": ["胸部CT"]}	0
+13	1001	2029-02-24	{"items": ["胸部CT"]}	0
+14	1001	2030-02-24	{"items": ["胸部CT"]}	0
+15	1001	2031-02-24	{"items": ["胸部CT"]}	0
+p1002_task_cnt
+0
+*************************** 1. row ***************************
+       id: 1001
+     name: 演示患者
+doctor_id: 2
+*************************** 2. row ***************************
+       id: 1002
+     name: 对照患者
+doctor_id: NULL

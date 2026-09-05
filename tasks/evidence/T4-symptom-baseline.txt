@@ -1,0 +1,2 @@
+cnt	max_id
+0	NULL
