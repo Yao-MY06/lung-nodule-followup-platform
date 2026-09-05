@@ -3,6 +3,7 @@ package com.yiliao.ai.controller;
 import com.yiliao.ai.entity.KnowledgeDoc;
 import com.yiliao.ai.mapper.KnowledgeDocMapper;
 import com.yiliao.ai.rag.KnowledgeBaseService;
+import com.yiliao.ai.security.KnowledgeAdminGuard;
 import com.yiliao.common.core.result.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.constraints.NotBlank;
@@ -29,6 +30,7 @@ public class KnowledgeController {
     @Operation(summary = "指南文档切片入库（管理员）")
     @PostMapping("/import")
     public Result<Integer> importDoc(@jakarta.validation.Valid @RequestBody ImportRequest request) {
+        KnowledgeAdminGuard.requireAdmin();
         int chunks = knowledgeBase.importDoc(request.docName(), request.content());
         KnowledgeDoc doc = new KnowledgeDoc();
         doc.setDocName(request.docName());

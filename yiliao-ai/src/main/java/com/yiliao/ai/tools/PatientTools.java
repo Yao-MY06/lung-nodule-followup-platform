@@ -25,28 +25,46 @@ public class PatientTools {
 
     private final FollowupApi followupApi;
     private final NoduleApi noduleApi;
+    private final Long patientIdSnapshot;
+    private final boolean identityBound;
 
     public PatientTools(FollowupApi followupApi, NoduleApi noduleApi) {
+        this(followupApi, noduleApi, null, false);
+    }
+
+    private PatientTools(FollowupApi followupApi, NoduleApi noduleApi,
+                         Long patientIdSnapshot, boolean identityBound) {
         this.followupApi = followupApi;
         this.noduleApi = noduleApi;
+        this.patientIdSnapshot = patientIdSnapshot;
+        this.identityBound = identityBound;
+    }
+
+    /**
+     * Create a request-scoped tool view with an immutable patient identity.
+     * The view is used by streaming calls, where request thread locals are not
+     * available on the Reactor worker that executes a tool.
+     */
+    public PatientTools forPatient(Long patientId) {
+        return new PatientTools(followupApi, noduleApi, patientId, true);
     }
 
     @Tool(description = "查询当前患者本人的下次随访计划（日期与项目）")
     public NextFollowupDTO queryNextFollowup() {
-        Long patientId = currentPatientId();
+        Long patientId = resolvePatientId();
         return followupApi.nextFollowup(patientId).data();
     }
 
     @Tool(description = "查询当前患者本人的结节变化趋势（历次复查快照）")
     public List<SnapshotDTO> queryNoduleTrend() {
-        Long patientId = currentPatientId();
+        Long patientId = resolvePatientId();
         return noduleApi.getTrend(patientId, null).data();
     }
 
     @Tool(description = "上报症状。symptom：症状名；severity：严重程度 1-5")
     public String reportSymptom(@ToolParam(description = "症状，如 咳嗽/疼痛/乏力") String symptom,
                                 @ToolParam(description = "严重程度 1-5 的整数") int severity) {
-        Long patientId = currentPatientId();
+        Long patientId = resolvePatientId();
         if (severity < 1 || severity > 5) {
             return "severity 必须在 1-5 之间";
         }
@@ -59,9 +77,19 @@ public class PatientTools {
 
     @Tool(description = "查询当前患者本人最近一次检查报告的结论摘要")
     public String queryReportSummary() {
-        Long patientId = currentPatientId();
+        Long patientId = resolvePatientId();
         String summary = noduleApi.reportSummary(patientId).data();
         return summary == null ? "暂无检查报告记录" : summary;
+    }
+
+    private Long resolvePatientId() {
+        if (identityBound) {
+            if (patientIdSnapshot == null) {
+                throw new BizException(CommonErrorCode.UNAUTHORIZED);
+            }
+            return patientIdSnapshot;
+        }
+        return currentPatientId();
     }
 
     /** 当前登录患者 id：只认网关透传头，LLM 无法注入。 */
@@ -69,7 +97,11 @@ public class PatientTools {
         if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attributes) {
             String userId = attributes.getRequest().getHeader(YiliaoConstants.HEADER_USER_ID);
             if (userId != null && !userId.isBlank()) {
-                return Long.valueOf(userId);
+                try {
+                    return Long.valueOf(userId);
+                } catch (NumberFormatException ignored) {
+                    // Treat malformed gateway identity headers as unauthenticated.
+                }
             }
         }
         throw new BizException(CommonErrorCode.UNAUTHORIZED);

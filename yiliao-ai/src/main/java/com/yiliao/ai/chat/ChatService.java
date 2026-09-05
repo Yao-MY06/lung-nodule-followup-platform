@@ -2,6 +2,7 @@ package com.yiliao.ai.chat;
 
 import com.yiliao.ai.rag.HybridRetriever;
 import com.yiliao.ai.rag.KnowledgeBaseService;
+import com.yiliao.ai.security.PatientChatGuard;
 import com.yiliao.ai.tools.PatientTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
@@ -23,12 +24,14 @@ public class ChatService {
     private final ChatClient.Builder chatClientBuilder;
     private final KnowledgeBaseService knowledgeBase;
     private final PatientTools patientTools;
+    private final PatientChatGuard patientChatGuard;
 
     public ChatService(ChatClient.Builder chatClientBuilder, KnowledgeBaseService knowledgeBase,
-                       PatientTools patientTools) {
+                       PatientTools patientTools, PatientChatGuard patientChatGuard) {
         this.chatClientBuilder = chatClientBuilder;
         this.knowledgeBase = knowledgeBase;
         this.patientTools = patientTools;
+        this.patientChatGuard = patientChatGuard;
     }
 
     /** 引用溯源组装（specs/modules/ai.md §4.4：回答必须附出处）——纯函数供测试。 */
@@ -44,6 +47,10 @@ public class ChatService {
     }
 
     public SseEmitter chat(String message) {
+        // 入口处完成角色校验 + 用户 id→档案 id 解析（PatientChatGuard，specs/modules/ai.md；
+        // AGENTS.md 患者数据权限不变量），工具线程只消费不可变快照，不再读请求线程的 ThreadLocal。
+        Long patientId = patientChatGuard.requirePatientArchive();
+        PatientTools requestPatientTools = patientTools.forPatient(patientId);
         SseEmitter emitter = new SseEmitter(120_000L);
         List<HybridRetriever.DocChunk> contexts = knowledgeBase.isEmpty()
                 ? List.of() : knowledgeBase.retrieve(message);
@@ -53,7 +60,7 @@ public class ChatService {
                 .prompt()
                 .system(systemPrompt)
                 .user(message)
-                .tools(patientTools)
+                .tools(requestPatientTools)
                 .stream()
                 .content()
                 .doOnNext(delta -> {

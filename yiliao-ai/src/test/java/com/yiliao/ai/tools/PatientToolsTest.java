@@ -56,6 +56,20 @@ class PatientToolsTest {
     }
 
     @Test
+    void explicitPatientIdentitySurvivesRequestContextCleared() {
+        when(followupApi.nextFollowup(1001L)).thenReturn(com.yiliao.common.core.result.Result.ok(
+                new NextFollowupDTO(9L, LocalDate.of(2026, 9, 10), "[胸部CT]", 1)));
+
+        PatientTools tools = new PatientTools(followupApi, noduleApi).forPatient(1001L);
+        RequestContextHolder.resetRequestAttributes();
+
+        NextFollowupDTO result = tools.queryNextFollowup();
+
+        assertEquals(LocalDate.of(2026, 9, 10), result.planDate());
+        verify(followupApi).nextFollowup(eq(1001L));
+    }
+
+    @Test
     void reportSymptomValidatesSeverityRange() {
         PatientTools tools = new PatientTools(followupApi, noduleApi);
         String result = tools.reportSymptom("咳嗽", 9);
