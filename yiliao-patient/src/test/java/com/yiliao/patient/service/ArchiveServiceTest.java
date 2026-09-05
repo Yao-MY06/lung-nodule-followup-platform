@@ -18,10 +18,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.dao.DuplicateKeyException;
 
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -30,6 +32,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -65,10 +69,68 @@ class ArchiveServiceTest {
     }
 
     private CreateArchiveRequest request(CreateArchiveRequest.PlanRequest plan) {
-        return new CreateArchiveRequest("张三", 1, null, "110101196503120011", "13812345678",
+        return request("110101196503120011", plan);
+    }
+
+    private CreateArchiveRequest request(String idCard, CreateArchiveRequest.PlanRequest plan) {
+        return new CreateArchiveRequest("张三", 1, null, idCard, "13812345678",
                 null, null, null, 2L, 1, null,
                 new CreateArchiveRequest.RiskFactorRequest(new BigDecimal("30"), 1, 0, 0, null),
                 null, plan);
+    }
+
+    @Test
+    void lockKeyUsesNormalizedIdCardHash() {
+        service.create(request(" 11010119650312001x ", null));
+        service.create(request("11010119650312001X", null));
+
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(redissonClient, times(2)).getLock(captor.capture());
+        assertEquals(captor.getAllValues().get(0), captor.getAllValues().get(1));
+        assertTrue(captor.getAllValues().get(0).matches(".*:[0-9a-f]{64}$"));
+        assertFalse(captor.getAllValues().get(0).contains("11010119650312001"));
+    }
+
+    @Test
+    void differentIdCardsUseDifferentLockKeys() {
+        service.create(request("110101196503120011", null));
+        service.create(request("110101196503120012", null));
+
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(redissonClient, times(2)).getLock(captor.capture());
+        assertNotEquals(captor.getAllValues().get(0), captor.getAllValues().get(1));
+    }
+
+    @Test
+    void blankIdCardsDoNotShareLockKey() {
+        service.create(request("   ", null));
+        service.create(request(null, null));
+
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(redissonClient, times(2)).getLock(captor.capture());
+        assertNotEquals(captor.getAllValues().get(0), captor.getAllValues().get(1));
+    }
+
+    @Test
+    void existingIdCardHashIsRejectedBeforeInsert() {
+        when(archiveMapper.selectOne(any())).thenReturn(new PatientArchive());
+
+        BizException e = assertThrows(BizException.class,
+                () -> service.create(request("110101196503120011", null)));
+
+        assertEquals(PatientErrorCode.DUPLICATE_ARCHIVE.getCode(), e.getCode());
+        verify(archiveMapper, never()).insert(any(PatientArchive.class));
+    }
+
+    @Test
+    void databaseUniqueConflictIsRejectedAsDuplicate() {
+        when(archiveMapper.insert(any(PatientArchive.class)))
+                .thenThrow(new DuplicateKeyException("duplicate id_card_hash"));
+
+        BizException e = assertThrows(BizException.class,
+                () -> service.create(request("110101196503120011", null)));
+
+        assertEquals(PatientErrorCode.DUPLICATE_ARCHIVE.getCode(), e.getCode());
     }
 
     @Test
@@ -87,6 +149,7 @@ class ArchiveServiceTest {
         // 落库的是密文，且可解密还原（specs/modules/patient.md §4.3）
         assertNotEquals("110101196503120011", captor.getValue().getIdCard());
         assertEquals("110101196503120011", cipher.decrypt(captor.getValue().getIdCard()));
+        assertEquals(IdCardCipher.hash("110101196503120011"), captor.getValue().getIdCardHash());
         assertEquals(PatientArchive.STAGE_NODULE, captor.getValue().getStageLabel());
     }
 

@@ -16,7 +16,7 @@
 
 | 表 | 关键点 |
 |---|---|
-| patient_archive | `patient_no` 唯一；`id_card` 加密存储、出参脱敏；`stage_label` 见枚举；索引 idx_doctor/idx_stage |
+| patient_archive | `patient_no` 唯一；`id_card` 加密存储、出参脱敏；`id_card_hash` 为规范化身份证 SHA-256，非空时唯一；`stage_label` 见枚举；索引 idx_doctor/idx_stage |
 | patient_risk_factor | 每患者一条（uk_patient）；吸烟包年/家族史/职业暴露/既往肿瘤史/合并症——**直接影响随访策略选择** |
 | patient_diagnosis | 一患者多条；TNM/临床分期/病理/基因/是否辅助治疗——随访模板匹配输入 |
 
@@ -74,3 +74,4 @@ curl -X POST http://localhost:8080/api/patient/archives \
 | 版本 | 日期 | 变更 | 原因 |
 |---|---|---|---|
 | v1.0 | 2026-08-22 | 首版，收敛自 make/技术设计文档 §7/§13 | 分层文档体系建立 |
+| v1.1 | 2026-09-05 | patient_archive 增加 id_card_hash 唯一性校验字段 | 修复重复建档竞态；存量库迁移见 tasks/sql/V20260905__patient_archive_id_card_hash.sql |

@@ -7,8 +7,12 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.HexFormat;
+import java.util.Locale;
 
 /**
  * 身份证 AES-GCM 加解密（specs/modules/patient.md §4.3：id_card 加密存储、展示脱敏）。
@@ -63,6 +67,31 @@ public class IdCardCipher {
             return new String(plain, StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new IllegalStateException("身份证解密失败", e);
+        }
+    }
+
+    /**
+     * 身份证唯一性校验使用的规范化值：去除首尾空白并统一大小写。
+     * 空值返回空字符串，便于调用方将其视为“未提供身份证”。
+     */
+    public static String normalize(String plainIdCard) {
+        return plainIdCard == null ? "" : plainIdCard.trim().toUpperCase(Locale.ROOT);
+    }
+
+    /**
+     * 生成身份证不可逆 SHA-256 哈希。未提供身份证时返回 null，避免所有空值共享唯一锁或唯一索引。
+     */
+    public static String hash(String plainIdCard) {
+        String normalized = normalize(plainIdCard);
+        if (normalized.isEmpty()) {
+            return null;
+        }
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(normalized.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("身份证哈希失败", e);
         }
     }
 

@@ -23,6 +23,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -30,6 +31,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -77,14 +79,15 @@ public class ArchiveService {
     }
 
     public CreateResult create(CreateArchiveRequest request) {
-        String lockKey = YiliaoConstants.LOCK_PREFIX + "patient:create:"
-                + request.name() + ":" + (request.phone() == null ? "" : request.phone());
+        String idCardHash = IdCardCipher.hash(request.idCard());
+        String lockIdentity = idCardHash == null ? UUID.randomUUID().toString() : idCardHash;
+        String lockKey = YiliaoConstants.LOCK_PREFIX + "patient:create:" + lockIdentity;
         RLock lock = redissonClient.getLock(lockKey);
         try {
             if (!lock.tryLock(2, 15, TimeUnit.SECONDS)) {
                 throw new BizException(PatientErrorCode.DUPLICATE_ARCHIVE);
             }
-            return doCreate(request);
+            return doCreate(request, idCardHash);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new BizException(PatientErrorCode.DUPLICATE_ARCHIVE.withMsg("建档被中断，请重试"));
@@ -95,13 +98,20 @@ public class ArchiveService {
         }
     }
 
-    private CreateResult doCreate(CreateArchiveRequest request) {
+    private CreateResult doCreate(CreateArchiveRequest request, String idCardHash) {
+        if (idCardHash != null && archiveMapper.selectOne(new LambdaQueryWrapper<PatientArchive>()
+                .eq(PatientArchive::getIdCardHash, idCardHash)
+                .last("LIMIT 1")) != null) {
+            throw new BizException(PatientErrorCode.DUPLICATE_ARCHIVE);
+        }
+
         PatientArchive archive = new PatientArchive();
         archive.setPatientNo(generatePatientNo());
         archive.setName(request.name());
         archive.setGender(request.gender());
         archive.setBirthDate(request.birthDate());
         archive.setIdCard(idCardCipher.encrypt(request.idCard()));
+        archive.setIdCardHash(idCardHash);
         archive.setPhone(request.phone());
         archive.setAddress(request.address());
         archive.setEmergencyContact(request.emergencyContact());
@@ -110,7 +120,12 @@ public class ArchiveService {
         archive.setSourceType(request.sourceType());
         archive.setRemark(request.remark());
         archive.setStageLabel(PatientArchive.STAGE_NODULE);
-        archiveMapper.insert(archive);
+        try {
+            archiveMapper.insert(archive);
+        } catch (DuplicateKeyException e) {
+            // 并发请求可能同时通过预查询，数据库唯一索引是最终兜底。
+            throw new BizException(PatientErrorCode.DUPLICATE_ARCHIVE);
+        }
 
         if (request.riskFactor() != null) {
             PatientRiskFactor risk = new PatientRiskFactor();

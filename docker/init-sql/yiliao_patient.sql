@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS patient_archive (
   gender        TINYINT COMMENT '1男 2女',
   birth_date    DATE,
   id_card       VARCHAR(128) COMMENT '加密存储/展示脱敏',
+  id_card_hash  CHAR(64) COMMENT '身份证规范化值 SHA-256，不可逆',
   phone         VARCHAR(20) COMMENT '展示脱敏',
   address       VARCHAR(255),
   emergency_contact VARCHAR(32),
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS patient_archive (
   create_time   DATETIME DEFAULT CURRENT_TIMESTAMP,
   update_time   DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted       TINYINT DEFAULT 0,
+  UNIQUE KEY uk_id_card_hash(id_card_hash),
   KEY idx_doctor(doctor_id), KEY idx_stage(stage_label)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='患者档案';
 

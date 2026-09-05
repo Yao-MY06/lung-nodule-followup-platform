@@ -22,6 +22,8 @@ public class PatientArchive extends BaseEntity {
     private Integer gender;
     private LocalDate birthDate;
     private String idCard;
+    /** 身份证规范化后的 SHA-256 哈希，仅用于唯一性校验，不可逆。 */
+    private String idCardHash;
     private String phone;
     private String address;
     private String emergencyContact;
@@ -43,6 +45,8 @@ public class PatientArchive extends BaseEntity {
     public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
     public String getIdCard() { return idCard; }
     public void setIdCard(String idCard) { this.idCard = idCard; }
+    public String getIdCardHash() { return idCardHash; }
+    public void setIdCardHash(String idCardHash) { this.idCardHash = idCardHash; }
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
     public String getAddress() { return address; }
