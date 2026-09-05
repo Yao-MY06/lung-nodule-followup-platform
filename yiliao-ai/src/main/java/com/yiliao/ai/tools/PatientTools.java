@@ -9,6 +9,7 @@ import com.yiliao.common.core.exception.BizException;
 import com.yiliao.common.core.error.CommonErrorCode;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -28,6 +29,8 @@ public class PatientTools {
     private final Long patientIdSnapshot;
     private final boolean identityBound;
 
+    /** 多构造器场景必须显式指定注入构造器（2026-09-05 T4 回归发现：无标注时 Spring 回退无参构造 → 启动失败）。 */
+    @Autowired
     public PatientTools(FollowupApi followupApi, NoduleApi noduleApi) {
         this(followupApi, noduleApi, null, false);
     }
