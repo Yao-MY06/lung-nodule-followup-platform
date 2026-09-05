@@ -1,0 +1,24 @@
+== P1 传输层修复复验（2026-09-05 21:40，决策一落地后，ai PID 26776，经网关 8080） ==
+
+[1] POST /api/ai/chat + Accept: text/event-stream（admin，守卫在 LLM 调用前拦截）
+时间: 2026-09-05 21:40:45
+SSE_FORM: http=403 ctype=text/event-stream;charset=UTF-8
+--- 响应体（原始） ---
+event:error
+data:{"code":403,"msg":"AI 助手当前仅对患者端开放"}
+
+--- 响应体十六进制结尾（证明空行终止符） ---
+0000000 200 346 224 276   "   }  \n  \n
+0000010
+
+[2] POST /api/ai/chat + Accept: */*（平台惯例形态）
+时间: 2026-09-05 21:40:46
+JSON_FORM: http=200 ctype=application/json
+--- 响应体（原始） ---
+{"code":403,"msg":"AI 助手当前仅对患者端开放","data":null,"success":false}
+[3] ai 日志增量（无 LLM 出网证据：仅 2 行守卫 WARN，无任何 chat/LLM/stream 日志）
+日志行数: before=502 after=504 (delta=2)
+2026-09-05T21:40:45.886+08:00  WARN 26776 --- [yiliao-ai] [nio-8086-exec-2] c.y.ai.error.SseBizExceptionHandler      : 业务异常 code=403 msg=AI 助手当前仅对患者端开放 accept=text/event-stream
+2026-09-05T21:40:46.046+08:00  WARN 26776 --- [yiliao-ai] [nio-8086-exec-7] c.y.ai.error.SseBizExceptionHandler      : 业务异常 code=403 msg=AI 助手当前仅对患者端开放 accept=*/*
+
+== 判定：P1 从“部分通过”升级为“通过”：SSE 形态 HTTP 403 + text/event-stream + event:error 体；非 SSE 形态 200+code:403 与全局惯例一致；两次均无 LLM 调用。 ==
